@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bats-core
+        run: |
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            brew install bats-core
+          else
+            sudo apt-get update
+            sudo apt-get install -y bats
+          fi
+
+      - name: Install fzf
+        run: |
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            brew install fzf
+          else
+            sudo apt-get install -y fzf
+          fi
+
+      - name: Run tests
+        run: make test
