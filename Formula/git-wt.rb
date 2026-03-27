@@ -2,8 +2,7 @@ class GitWt < Formula
   desc "A fast, interactive git worktree manager"
   homepage "https://github.com/mattmcmanus/git-wt"
   url "https://github.com/mattmcmanus/git-wt/archive/refs/tags/v0.1.0.tar.gz"
-  # sha256 will be filled in after first release
-  sha256 ""
+  sha256 "044685d344cbcc4bc50c3e93a6f32f7c368c71e30ab16bac7e8a6d904f25f698"
   license "MIT"
 
   depends_on "fzf"
