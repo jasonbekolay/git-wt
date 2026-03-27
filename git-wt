@@ -149,16 +149,43 @@ clean_merged_worktrees() {
 	echo "Cleaned up worktrees and pruned."
 }
 
-# Run optional post-add-worktree hook from the container directory
+# Find and run post-add-worktree hook.
+# Walks up from the current directory looking for .wt/post-add-worktree,
+# stopping at $HOME. First match wins. ~/.wt/post-add-worktree is the
+# global default.
 post_add_worktree() {
-	local main_worktree
-	local container_dir
-	local post_add_script
-	main_worktree=$(git worktree list --porcelain | awk '/^worktree / {sub(/^worktree /, "", $0); print; exit}')
-	container_dir=$(dirname "$main_worktree")
-	post_add_script="$container_dir/post-add-worktree"
-	if [ -f "$post_add_script" ]; then
-		"$post_add_script" "$(pwd)"
+	local search_dir
+	search_dir="$(pwd)"
+	local worktree_path
+	worktree_path="$(pwd)"
+
+	while true; do
+		if [ -x "$search_dir/.wt/post-add-worktree" ]; then
+			"$search_dir/.wt/post-add-worktree" "$worktree_path"
+			return 0
+		fi
+
+		# Stop at HOME (already checked $HOME/.wt above if path passes through it)
+		if [ "$search_dir" = "$HOME" ]; then
+			break
+		fi
+
+		# Move to parent
+		local parent
+		parent="$(dirname "$search_dir")"
+
+		# Stop if we've hit the filesystem root
+		if [ "$parent" = "$search_dir" ]; then
+			break
+		fi
+
+		search_dir="$parent"
+	done
+
+	# Global fallback: check ~/.wt/ if we didn't already walk through $HOME
+	if [ -x "$HOME/.wt/post-add-worktree" ]; then
+		"$HOME/.wt/post-add-worktree" "$worktree_path"
+		return 0
 	fi
 }
 
